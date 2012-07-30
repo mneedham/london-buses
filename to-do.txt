@@ -1,0 +1,2 @@
+[] Work out how to convert the locations into lat/longs
+[] Spike how to use neo spatial

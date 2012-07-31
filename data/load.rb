@@ -4,6 +4,14 @@ require 'fastercsv'
 require 'open-uri'
 require 'json'
 
+require 'neo4j'
+
+class Stop
+  include Neo4j::NodeMixin
+  index :code
+  property :code
+  property :name
+end
 
 neo = Neography::Rest.new
 
@@ -13,15 +21,23 @@ file_name = data_dir + "stops.csv"
 
 stops = FasterCSV.read(file_name).drop(1)
 
+stops_to_add = []
 stops.each do |stop|
 	code = stop[1]
 	name = stop[3]
 	easting = stop[4]
 	northing = stop[5]
 
-  neo.create_node(:name => name, :type => "stop", :code => code).tap do |node|
-    neo.add_node_to_index("stops", "name", name, node)
-    neo.add_node_to_index("stops", "code", code, node)
-  end	
-  puts "Code: #{code}, Stop: #{name}"
+	stops_to_add << { :name => name, :code => code  }
+	puts "Code: #{code}, Stop: #{name}"
 end
+
+Neo4j::Config[:storage_path] = File.expand_path('neo4j') + "/data/graph.db"
+
+Neo4j::Transaction.run do
+  stops_to_add.each do |stop|
+  	Stop.new(:name => stop[:name], :code => stop[:code])
+  end
+end
+
+p Stop.find(:code => 91532).first.name

@@ -13,7 +13,7 @@ stops = FasterCSV.read(file_name).drop(1)
 
 stops_to_add = []
 stops.each do |stop|
-	code = stop[1]
+	code = stop[0]
 	name = stop[3]
 	easting = stop[4]
 	northing = stop[5]
@@ -46,19 +46,22 @@ end
 routes_file = data_dir + "routes.csv"
 routes = FasterCSV.read(routes_file).drop(1)
 
-bus_1_stops = routes.group_by { |route| route[0] }["1"].select { |route| route[1] == "1"  }.map { |route| route[4]  }
+routes.group_by { |route| route[0] }.each_pair do |key, value|
+	puts "Bus route: #{key}, #{value.size}"
+  	stops = value.map { |route| route[3]  }
+  	stop_combinations = stops.zip(stops.drop(1))
+    p stop_combinations
 
-stop_combinations = bus_1_stops.zip(bus_1_stops.drop(1))
-
-
-Neo4j::Transaction.run do
-	stop_combinations.each do |stop_combination|
-		p stop_combination[0]
-		unless stop_combination[1].nil?
-			stop1 = StopsIndex.find("code: #{stop_combination[0]}").first
-			stop2 = StopsIndex.find("code: #{stop_combination[1]}").first
-			p stop1, stop2			
-			Neo4j::Relationship.new(:route, stop1, stop2, { :bus_number => 1 })
+	Neo4j::Transaction.run do
+		stop_combinations.each do |stop_combination|
+			p stop_combination[0]
+			unless stop_combination[1].nil?
+				puts "Adding stop #{stop_combination}"
+				stop1 = StopsIndex.find("code: #{stop_combination[0]}").first
+				stop2 = StopsIndex.find("code: #{stop_combination[1]}").first				
+				Neo4j::Relationship.new(:route, stop1, stop2, { :bus_number => 1 })			
+			end
 		end
 	end
+
 end

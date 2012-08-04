@@ -57,9 +57,9 @@ routes.group_by { |route| route[0] }.each_pair do |key, value|
 			p stop_combination[0]
 			unless stop_combination[1].nil?
 				puts "Adding stop #{stop_combination}"
-				stop1 = StopsIndex.find("code: #{stop_combination[0]}").first
-				stop2 = StopsIndex.find("code: #{stop_combination[1]}").first				
-				Neo4j::Relationship.new(:route, stop1, stop2, { :bus_number => 1 })			
+				stop1 = StopsIndex.find("code: \"#{stop_combination[0]}\"").first
+				stop2 = StopsIndex.find("code: \"#{stop_combination[1]}\"").first				
+				Neo4j::Relationship.new(:route, stop1, stop2, { :bus_number => key })			
 			end
 		end
 	end

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map_canvas { height: 100% }
+    </style>
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyCcoNY17EcY9uBcHjNfZ5rlaErBQLzSR_4&sensor=true"></script>
+    <script type="text/javascript" src="sugar-1.2.5.min.js"></script>
+    <script type="text/javascript" src="jquery-1.7.1.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        var officeLatLong = function(office) {              
+          return new google.maps.LatLng(parseFloat(office.lat), parseFloat(office.long));  
+        };
+      
+      $.getJSON("http://localhost:4567/routes.json",
+        function(data) {          
+          var latLong = function(row) {              
+            return new google.maps.LatLng(parseFloat(row.lat), parseFloat(row.long));  
+          };
+
+          var myOptions = { center: new google.maps.LatLng(51.511307,-0.131347),    panControl: false,
+                            streetViewControl: false,
+                            mapTypeControl: false, zoom: 11, mapTypeId: google.maps.MapTypeId.ROADMAP };
+          var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+          var emptyStyles = [ { featureType: "all", stylers: [ { visibility: "off" } ] }, { featureType: "water", stylers: [ { visibility: "on" } ] } ];
+
+          map.setOptions({styles: emptyStyles});
+
+          console.log("before start: " + new Date());
+          data.forEach(function(row) {  
+              var colour = "#A6D785";
+              var weight = 3;
+              var opacity = 1
+              var zIndex = 1;
+
+            
+              var coordinates = [latLong({"lat" : row.from.lat, "long" : row.from.long}), latLong({"lat" : row.to.lat, "long" : row.to.long})];            
+            
+              var routes = row.routes;              
+
+              if(routes > 3) {
+                colour = "#659D32"; 
+                zIndex = 2;    
+              } 
+
+              if(routes > 5) {
+                colour = "#458B00"; 
+                zIndex = 3;               
+              } 
+
+              if(routes > 10) {
+                colour = "#3B5323";
+                zIndex = 4;
+              } 
+
+              if(routes > 20) {                
+                colour = "#385E0F";
+                zIndex = 5;
+              }
+
+              // console.log("drawing line " + row.from.lat + "," + row.from.long + " " + row.to.lat + "," + row.to.long);
+              var path = new google.maps.Polyline({ path: coordinates, strokeColor: colour, strokeOpacity: opacity, strokeWeight: weight, geodesic : true, 
+                                                  zIndex : zIndex });
+              path.setMap(map); 
+
+          });      
+          console.log("after start: " + new Date());
+      }); 
+
+      });
+
+
+
+    </script>
+  </head>
+  <body>
+    <div id="map_canvas" style="width:100%; height:100%"></div>
+  </body>
+</html>

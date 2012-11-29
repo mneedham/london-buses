@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2011 Google Inc. All Rights Reserved.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+
+    <title>Fusion Tables Layer Example: Change Query on Zoom</title>
+
+    <!-- <link href="/apis/fusiontables/docs/samples/style/default.css"
+        rel="stylesheet" type="text/css"> -->
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyCcoNY17EcY9uBcHjNfZ5rlaErBQLzSR_4&sensor=true"></script>
+    <script type="text/javascript" src="jquery-1.7.1.min.js"></script>
+
+     <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map-canvas { height: 100% }
+    </style>
+
+    <script type="text/javascript">
+      $(document).ready(function() {
+        var tableId = '5031165';
+
+          var myOptions = { center: new google.maps.LatLng(51.511307,-0.131347),    
+                            panControl: false,
+                            streetViewControl: false,
+                            mapTypeControl: false, 
+                            zoom: 11, 
+                            mapTypeId: google.maps.MapTypeId.ROADMAP 
+                          };
+
+        var map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
+        var emptyStyles = [ { featureType: "all", stylers: [ { visibility: "off" } ] }, { featureType: "water", stylers: [ { visibility: "on" } ] } ];
+        map.setOptions({styles: emptyStyles});
+
+        var layer = new google.maps.FusionTablesLayer({
+          query: {
+            select: 'geometry',
+            from: tableId
+          },
+            styles: [
+              {     
+                where: "'name' == 1 or 'name' == 2 or 'name' == 3",           
+                polylineOptions: {
+                  strokeColor: "#A6D785",
+                  strokeWeight: "2",
+                  strokeOpacity: "1"  
+                }
+              },
+              {     
+                where: "'name' > 3 and 'name' <= 5",           
+                polylineOptions: {
+                  strokeColor: "#659D32",
+                  strokeWeight: "2",
+                  strokeOpacity: "1"  
+                }
+              },
+              {     
+                where: "'name' > 5 and 'name' <= 10",           
+                polylineOptions: {
+                  strokeColor: "#458B00",
+                  strokeWeight: "2",
+                  strokeOpacity: "1"  
+                }
+              },
+              {     
+                where: "'name' > 10 and 'name' <= 20",           
+                polylineOptions: {
+                  strokeColor: "#3B5323",
+                  strokeWeight: "2",
+                  strokeOpacity: "1"  
+                }
+              },
+              {     
+                where: "'name' > 20",           
+                polylineOptions: {
+                  strokeColor: "#385E0F",
+                  strokeWeight: "2",
+                  strokeOpacity: "1"  
+                }
+              } 
+              ]
+        });
+        layer.setMap(map);
+
+        // var tableId = '5008646';
+
+        //   var myOptions = { center: new google.maps.LatLng(37.4, -122.1), //center: new google.maps.LatLng(51.511307,-0.131347),    
+        //                     panControl: false,
+        //                     streetViewControl: false,
+        //                     mapTypeControl: false, 
+        //                     zoom: 12, 
+        //                     mapTypeId: google.maps.MapTypeId.ROADMAP };
+
+        // var map = new google.maps.Map(document.getElementById('map-canvas'), {
+        //   center: new google.maps.LatLng(37.4, -122.1),
+        //   zoom: 12,
+        //   mapTypeId: google.maps.MapTypeId.ROADMAP
+        // });
+
+        // map.setOptions({styles: emptyStyles});
+
+        // var layer = new google.maps.FusionTablesLayer({
+        //   query: {
+        //     select: 'geometry',
+        //     from: tableId
+        //   }
+        // });
+        // layer.setMap(map);
+
+        // Add a listener to listen for zoom changed events
+        google.maps.event.addListener(map, 'zoom_changed', function() {
+          var coarseZoom = 11;
+          var fineZoom = 15;
+          var zoomLevel = map.getZoom();
+
+          // Show a coarser geometry when the map is zoomed out
+          if (zoomLevel <= coarseZoom) {
+            layer.setOptions({
+              query: {
+                select: 'coarseLocation',
+                from: tableId
+              }
+            });
+
+          // Show a finer geometry when the map is zoomed in
+          } else if (zoomLevel >= fineZoom) {
+            layer.setOptions({
+              query: {
+                select: 'fineLocation',
+                from: tableId
+              }
+            });
+
+          // Otherwise, show a medium geometry
+          } else {
+            layer.setOptions({
+              query: {
+                select: 'middleLocation',
+                from: tableId
+              }
+            });
+          }
+
+          document.getElementById('zoom').innerHTML = zoomLevel;
+        });
+      })
+
+    </script>
+  </head>
+  <body>
+    <div id="map-canvas"></div>
+
+    <div>
+      <label>Zoom level:</label>
+      <span id="zoom">12</span>
+    </div>
+  </body>
+</html>

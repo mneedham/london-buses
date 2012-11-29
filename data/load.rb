@@ -5,11 +5,20 @@ require 'json'
 
 require 'neo4j'
 
-data_dir = File.expand_path('data') + '/'
+def data_dir
+	File.expand_path('data') + '/'
+end
 
-file_name = data_dir + "stops.csv"
+stops = FasterCSV.read(data_dir + "stops.csv").drop(1)
 
-stops = FasterCSV.read(file_name).drop(1)
+def lat_longs
+	@lat_longs ||= FasterCSV.read(data_dir + "stops_with_lat_longs.csv")
+end
+
+def find_lat_long(code)
+	matching_row = lat_longs.find { |x| x[0] == code }
+	{ :lat => matching_row[1], :long => matching_row[2] }
+end
 
 stops_to_add = []
 stops.each do |stop|
@@ -37,8 +46,9 @@ end
 
 Neo4j::Transaction.run do
   stops_to_add.each do |stop|
-	node = Neo4j::Node.new(:name => stop[:name], :code => stop[:code], :type => "stop")
-  	puts "Code: #{stop[:code]}, Stop: #{stop[:name]}"
+  	location = find_lat_long(stop[:code])
+	node = Neo4j::Node.new(:name => stop[:name], :code => stop[:code], :type => "stop", :lat => location[:lat], :long => location[:long])
+  	puts "Code: #{stop[:code]}, Stop: #{stop[:name]}, Lat: #{location[:lat]}, Long: #{location[:long]}"
   end
 end
 
@@ -50,7 +60,6 @@ routes.group_by { |route| route[0] }.each_pair do |key, value|
 	puts "Bus route: #{key}, #{value.size}"
   	stops = value.map { |route| route[3]  }
   	stop_combinations = stops.zip(stops.drop(1))
-    p stop_combinations
 
 	Neo4j::Transaction.run do
 		stop_combinations.each do |stop_combination|

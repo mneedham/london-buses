@@ -1,2 +1,31 @@
-[] Work out how to convert the locations into lat/longs
+[x] Work out how to convert the locations into lat/longs
 [] Spike how to use neo spatial
+
+Use cases:
+I'm at stop X, want to get to stop Y
+-- [] Tell me what bus/buses to get
+-- [] Show me the different stops that my journey will go through
+
+
+START current=node:stops(code = '10001'), home=node:stops(code = '6410') 
+MATCH p = shortestPath( current-[*..50]->home) 
+RETURN p;;
+
+START current=node:stops(code = '10001'), home=node:stops(code = '6372')  
+MATCH p = allShortestPaths( current-[*..50]->home)  
+RETURN p;;
+
+START current=node:stops(code = '14456'), home=node:stops(code = 'BP2390')  
+MATCH p = allShortestPaths( current-[*..50]->home)  
+RETURN extract(n in nodes(p) : n.name), extract(r in relationships(p) : r.bus_number);;
+
+START current=node:stops("code:*")
+MATCH current-[r:route]->otherStop
+RETURN current, otherStop, COUNT(otherStop) AS numberOfStops
+ORDER BY numberOfStops
+
+START n1=node:stops(code = '3178'), n2 = node:stops(code = '20462')
+MATCH n1-[r:route]->n2
+RETURN n1,n2,r
+
+- How to map a bunch of stops on a canvas according to lat/long
